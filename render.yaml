@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: resto-manager
+    runtime: node
+    buildCommand: npm install && npm --prefix frontend install && npm --prefix frontend run build && npm --prefix backend install
+    startCommand: node backend/src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DB_PATH
+        value: /var/data/data.sqlite
+      - key: JWT_SECRET
+        generateValue: true
+    disk:
+      name: sqlite-data
+      mountPath: /var/data
+      sizeGB: 1

@@ -1,0 +1,13 @@
+{
+  "name": "Papatchino",
+  "short_name": "Papatchino",
+  "description": "Papatchino — commandes, caisse, cuisine, administration",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d62027",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

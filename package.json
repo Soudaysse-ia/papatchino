@@ -1,0 +1,17 @@
+{
+  "name": "resto-manager",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Application de gestion de restaurant (commandes par QR code, caisse, cuisine, administration)",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "postinstall": "npm --prefix backend install && npm --prefix frontend install",
+    "seed": "npm --prefix backend run seed",
+    "dev": "concurrently -n \"API,WEB\" -c \"cyan,magenta\" \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

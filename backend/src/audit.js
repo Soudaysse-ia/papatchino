@@ -1,0 +1,16 @@
+import db from './db.js';
+
+const insertLog = db.prepare(
+  `INSERT INTO access_log (user_id, username, action, details) VALUES (?, ?, ?, ?)`
+);
+
+// Enregistre une action dans le journal d'audit.
+// user peut être null (ex. commande client via QR).
+export function logAction(user, action, details = '') {
+  insertLog.run(
+    user?.id ?? null,
+    user?.username ?? 'client',
+    action,
+    typeof details === 'string' ? details : JSON.stringify(details)
+  );
+}
