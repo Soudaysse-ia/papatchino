@@ -96,9 +96,14 @@ export default function OrderTracking() {
           <h3 className="mb-2 font-semibold text-slate-700">Votre commande</h3>
           <ul className="space-y-1 text-sm">
             {order.items.map((it, idx) => (
-              <li key={idx} className="flex justify-between">
-                <span>{it.qty}× {it.name}</span>
-                <span className="text-slate-500">{formatPrice(it.price * it.qty)}</span>
+              <li key={idx}>
+                <div className="flex justify-between">
+                  <span>{it.qty}× {it.name}</span>
+                  <span className="text-slate-500">{formatPrice(it.price * it.qty)}</span>
+                </div>
+                {(it.options || []).map((op, j) => (
+                  <p key={j} className="pl-4 text-xs text-slate-400">• {op.label}</p>
+                ))}
               </li>
             ))}
           </ul>

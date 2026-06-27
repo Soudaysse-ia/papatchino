@@ -36,6 +36,7 @@ export function initSchema() {
       is_available INTEGER NOT NULL DEFAULT 1,
       stock_quantity INTEGER NOT NULL DEFAULT 0,
       low_stock_threshold INTEGER NOT NULL DEFAULT 5,
+      options TEXT NOT NULL DEFAULT '[]',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -72,6 +73,12 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
     CREATE INDEX IF NOT EXISTS idx_log_ts ON access_log(timestamp);
   `);
+
+  // Migration : ajoute la colonne "options" aux bases existantes.
+  const cols = db.prepare("PRAGMA table_info(menu_items)").all();
+  if (!cols.some((c) => c.name === 'options')) {
+    db.exec("ALTER TABLE menu_items ADD COLUMN options TEXT NOT NULL DEFAULT '[]'");
+  }
 }
 
 export default db;

@@ -91,7 +91,10 @@ router.get('/export.csv', requireAuth('admin'), (req, res) => {
   for (const o of rows) {
     let items = [];
     try { items = JSON.parse(o.items); } catch { /* ignore */ }
-    const itemsStr = items.map((i) => `${i.qty}x ${i.name}`).join(', ');
+    const itemsStr = items.map((i) => {
+      const opts = (i.options || []).map((o) => o.label).join(' / ');
+      return `${i.qty}x ${i.name}${opts ? ` [${opts}]` : ''}`;
+    }).join(', ');
     lines.push([
       o.id, o.created_at, sourceLabel[o.source] || o.source, o.table_label || '',
       `"${itemsStr.replace(/"/g, '""')}"`, o.total_price,

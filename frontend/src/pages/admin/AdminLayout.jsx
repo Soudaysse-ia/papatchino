@@ -19,7 +19,7 @@ export default function AdminLayout() {
     <div className="flex min-h-full flex-col md:flex-row">
       <aside className="border-b bg-white md:w-64 md:border-b-0 md:border-r">
         <div className="flex items-center gap-2 border-b p-4">
-          <img src="/icon.svg" alt="" className="h-8 w-8" />
+          <img src="/papatch2.svg" alt="" className="h-8 w-8" />
           <div>
             <p className="font-bold text-slate-800">Administration</p>
             <p className="text-xs text-slate-500">{user?.username}</p>

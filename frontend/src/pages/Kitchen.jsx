@@ -103,9 +103,14 @@ export default function Kitchen() {
                   {o.note && <p className="mt-2 rounded bg-amber-500/20 px-2 py-1 text-sm text-amber-300">📝 {o.note}</p>}
                   <ul className="mt-3 space-y-1 text-lg">
                     {o.items.map((it, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span className="font-bold text-brand-400">{it.qty}×</span>
-                        <span>{it.name}</span>
+                      <li key={i}>
+                        <div className="flex gap-2">
+                          <span className="font-bold text-brand-400">{it.qty}×</span>
+                          <span>{it.name}</span>
+                        </div>
+                        {(it.options || []).map((op, j) => (
+                          <p key={j} className="pl-7 text-sm text-gold-300">• {op.label}</p>
+                        ))}
                       </li>
                     ))}
                   </ul>

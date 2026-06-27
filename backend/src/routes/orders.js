@@ -69,8 +69,19 @@ router.post('/', (req, res) => {
         const stillAvailable = newStock > 0 ? menuItem.is_available : 0;
         db.prepare('UPDATE menu_items SET stock_quantity = ?, is_available = ? WHERE id = ?')
           .run(newStock, stillAvailable, menuItem.id);
-        lineItems.push({ id: menuItem.id, name: menuItem.name, price: menuItem.price, qty });
-        total += menuItem.price * qty;
+
+        // Résolution et validation des options (le prix est recalculé côté serveur).
+        const resolved = resolveOptions(menuItem, it.options);
+        const unitPrice = menuItem.price + resolved.extra;
+        lineItems.push({
+          id: menuItem.id,
+          name: menuItem.name,
+          base_price: menuItem.price,
+          price: unitPrice,
+          qty,
+          options: resolved.lines,
+        });
+        total += unitPrice * qty;
       }
 
       const info = db.prepare(`
@@ -176,6 +187,46 @@ function serialize(o) {
 }
 function safeParse(s) { try { return JSON.parse(s); } catch { return []; } }
 function httpError(status, message) { const e = new Error(message); e.httpStatus = status; return e; }
+
+// Valide la sélection d'options d'un article contre sa définition et calcule le surcoût.
+// `selection` = { [groupKey]: choiceKey } (choix unique) ou { [groupKey]: [choiceKeys] } (multi).
+// Renvoie { lines: [{label, price}], extra: number }.
+function resolveOptions(menuItem, selection) {
+  let groups = [];
+  try { groups = JSON.parse(menuItem.options || '[]'); } catch { groups = []; }
+  if (!Array.isArray(groups) || groups.length === 0) return { lines: [], extra: 0 };
+
+  const sel = selection || {};
+  const lines = [];
+  let extra = 0;
+
+  for (const group of groups) {
+    const raw = sel[group.key];
+    const chosenKeys = Array.isArray(raw) ? raw : (raw != null && raw !== '' ? [raw] : []);
+
+    if (group.type === 'multi') {
+      const min = group.min ?? (group.required ? 1 : 0);
+      const max = group.max ?? Infinity;
+      if (chosenKeys.length < min || chosenKeys.length > max) {
+        throw httpError(400, `"${menuItem.name}" : choisissez ${min === max ? min : `${min} à ${max}`} pour « ${group.label} »`);
+      }
+    } else {
+      if (group.required && chosenKeys.length !== 1) {
+        throw httpError(400, `"${menuItem.name}" : sélectionnez « ${group.label} »`);
+      }
+      if (chosenKeys.length > 1) throw httpError(400, `"${menuItem.name}" : un seul choix pour « ${group.label} »`);
+    }
+
+    for (const key of chosenKeys) {
+      const choice = (group.choices || []).find((c) => c.key === key);
+      if (!choice) throw httpError(400, `"${menuItem.name}" : option invalide pour « ${group.label} »`);
+      const price = Number(choice.price) || 0;
+      extra += price;
+      lines.push({ group: group.label, label: choice.label, price });
+    }
+  }
+  return { lines, extra };
+}
 
 function notifyLowStock(io) {
   if (!io) return;

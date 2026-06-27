@@ -4,5 +4,7 @@ dist/
 *.sqlite-shm
 *.sqlite-wal
 backend/data.sqlite*
+backend/uploads/
 .env
 .DS_Store
+.claude/

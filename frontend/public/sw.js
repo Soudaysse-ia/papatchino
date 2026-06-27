@@ -1,6 +1,6 @@
 // Service worker minimal : cache de l'app shell pour le mode hors ligne (PWA).
 const CACHE = 'resto-manager-v1';
-const APP_SHELL = ['/', '/index.html', '/icon.svg', '/manifest.json'];
+const APP_SHELL = ['/', '/index.html', '/papatch2.svg', '/logo.svg', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_SHELL)).then(() => self.skipWaiting()));

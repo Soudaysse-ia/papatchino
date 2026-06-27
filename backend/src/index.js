@@ -34,7 +34,12 @@ const io = new Server(server, { cors: { origin: CLIENT_ORIGIN } });
 app.set('io', io);
 
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '8mb' }));
+
+// Photos des plats téléversées (servies statiquement).
+const uploadsPath = join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+app.use('/uploads', express.static(uploadsPath));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 

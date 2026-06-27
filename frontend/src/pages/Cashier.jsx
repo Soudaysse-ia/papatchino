@@ -7,7 +7,9 @@ import { playAlert, unlockAudio } from '../lib/sound.js';
 import {
   formatPrice, formatTime, elapsed, STATUS_LABELS, STATUS_COLORS, PAYMENT_LABELS, SOURCE_LABELS,
 } from '../lib/format.js';
+import { hasOptions, unitPrice, optionLines, lineKey, emptySelection } from '../lib/cart.js';
 import OnlineBadge from '../components/OnlineBadge.jsx';
+import OptionPicker from '../components/OptionPicker.jsx';
 
 export default function Cashier() {
   const { user, logout } = useAuth();
@@ -134,9 +136,14 @@ function OrderFeed({ orders, onStatus, onPay }) {
           <span className="mt-1 inline-block text-xs text-slate-400">{SOURCE_LABELS[o.source]}</span>
           <ul className="mt-3 space-y-1 text-sm">
             {o.items.map((it, i) => (
-              <li key={i} className="flex justify-between">
-                <span>{it.qty}× {it.name}</span>
-                <span className="text-slate-500">{formatPrice(it.price * it.qty)}</span>
+              <li key={i}>
+                <div className="flex justify-between">
+                  <span>{it.qty}× {it.name}</span>
+                  <span className="text-slate-500">{formatPrice(it.price * it.qty)}</span>
+                </div>
+                {(it.options || []).map((op, j) => (
+                  <p key={j} className="pl-4 text-xs text-slate-400">• {op.label}</p>
+                ))}
               </li>
             ))}
           </ul>
@@ -182,38 +189,50 @@ function CreateOrderForm({ onCreated }) {
   const [source, setSource] = useState('walk_in');
   const [tableLabel, setTableLabel] = useState('');
   const [note, setNote] = useState('');
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState([]); // [{ key, item, selection, qty }]
+  const [picker, setPicker] = useState(null);
   const [search, setSearch] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => { api.get('/menu/manage').then(setMenu).catch(() => {}); }, []);
 
-  const lines = Object.entries(cart)
-    .map(([id, qty]) => ({ item: menu.find((m) => m.id === +id), qty }))
-    .filter((l) => l.item && l.qty > 0);
-  const total = lines.reduce((s, l) => s + l.item.price * l.qty, 0);
+  const total = cart.reduce((s, l) => s + unitPrice(l.item, l.selection) * l.qty, 0);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return menu.filter((m) => m.is_available && (!q || m.name.toLowerCase().includes(q)));
   }, [menu, search]);
 
-  function setQty(id, qty) {
-    setCart((c) => { const n = { ...c }; if (qty <= 0) delete n[id]; else n[id] = qty; return n; });
+  function addLine(item, selection, qty) {
+    const key = lineKey(item.id, selection);
+    setCart((c) => {
+      const existing = c.find((l) => l.key === key);
+      if (existing) return c.map((l) => (l.key === key ? { ...l, qty: l.qty + qty } : l));
+      return [...c, { key, item, selection, qty }];
+    });
+  }
+
+  function onAdd(item) {
+    if (hasOptions(item)) setPicker(item);
+    else addLine(item, emptySelection(item), 1);
+  }
+
+  function changeQty(key, delta) {
+    setCart((c) => c.map((l) => (l.key === key ? { ...l, qty: l.qty + delta } : l)).filter((l) => l.qty > 0));
   }
 
   async function submit() {
-    if (lines.length === 0) return;
+    if (cart.length === 0) return;
     setSubmitting(true); setError('');
     try {
       await api.post('/orders', {
         source,
         table_label: source === 'delivery' ? (tableLabel || 'Livraison') : tableLabel,
         note,
-        items: lines.map((l) => ({ id: l.item.id, qty: l.qty })),
+        items: cart.map((l) => ({ id: l.item.id, qty: l.qty, options: l.selection })),
       });
-      setCart({}); setTableLabel(''); setNote('');
+      setCart([]); setTableLabel(''); setNote('');
       onCreated();
     } catch (e) { setError(e.message); }
     finally { setSubmitting(false); }
@@ -231,11 +250,9 @@ function CreateOrderForm({ onCreated }) {
                 <p className="font-medium">{m.name}</p>
                 <p className="text-xs text-slate-500">{formatPrice(m.price)} · stock {m.stock_quantity}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="btn-secondary h-8 w-8 !px-0" onClick={() => setQty(m.id, (cart[m.id] || 0) - 1)}>−</button>
-                <span className="w-6 text-center">{cart[m.id] || 0}</span>
-                <button className="btn-primary h-8 w-8 !px-0" onClick={() => setQty(m.id, (cart[m.id] || 0) + 1)}>+</button>
-              </div>
+              <button className="btn-primary h-8 px-3 text-sm" onClick={() => onAdd(m)}>
+                {hasOptions(m) ? 'Choisir' : 'Ajouter'}
+              </button>
             </div>
           ))}
         </div>
@@ -255,14 +272,24 @@ function CreateOrderForm({ onCreated }) {
         <input className="input mb-3" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Sans piment, à emporter…" />
 
         <div className="mt-2 border-t pt-3">
-          {lines.length === 0 ? (
+          {cart.length === 0 ? (
             <p className="text-sm text-slate-400">Aucun article sélectionné.</p>
           ) : (
-            <ul className="space-y-1 text-sm">
-              {lines.map((l) => (
-                <li key={l.item.id} className="flex justify-between">
-                  <span>{l.qty}× {l.item.name}</span>
-                  <span>{formatPrice(l.item.price * l.qty)}</span>
+            <ul className="space-y-2 text-sm">
+              {cart.map((l) => (
+                <li key={l.key} className="rounded-lg border p-2">
+                  <div className="flex justify-between font-medium">
+                    <span>{l.item.name}</span>
+                    <span>{formatPrice(unitPrice(l.item, l.selection) * l.qty)}</span>
+                  </div>
+                  {optionLines(l.item, l.selection).map((o, i) => (
+                    <p key={i} className="text-xs text-slate-500">• {o.label}{o.price > 0 && ` (+${formatPrice(o.price)})`}</p>
+                  ))}
+                  <div className="mt-1 flex items-center gap-2">
+                    <button className="btn-secondary h-7 w-7 !px-0" onClick={() => changeQty(l.key, -1)}>−</button>
+                    <span className="w-5 text-center">{l.qty}</span>
+                    <button className="btn-secondary h-7 w-7 !px-0" onClick={() => changeQty(l.key, +1)}>+</button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -272,10 +299,18 @@ function CreateOrderForm({ onCreated }) {
           </div>
         </div>
         {error && <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-        <button className="btn-primary mt-3 w-full" disabled={submitting || lines.length === 0} onClick={submit}>
+        <button className="btn-primary mt-3 w-full" disabled={submitting || cart.length === 0} onClick={submit}>
           {submitting ? 'Création…' : 'Valider la commande'}
         </button>
       </div>
+
+      {picker && (
+        <OptionPicker
+          item={picker}
+          onClose={() => setPicker(null)}
+          onConfirm={(selection, qty) => { addLine(picker, selection, qty); setPicker(null); }}
+        />
+      )}
     </div>
   );
 }

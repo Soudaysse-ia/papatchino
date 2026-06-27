@@ -67,7 +67,16 @@ export default function OrdersHistory() {
                 <td className="p-3 whitespace-nowrap text-slate-500">{formatDateTime(o.created_at)}</td>
                 <td className="p-3">{SOURCE_LABELS[o.source]}</td>
                 <td className="p-3">{o.table_label || '—'}</td>
-                <td className="p-3 text-slate-600">{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</td>
+                <td className="p-3 text-slate-600">
+                  {o.items.map((it, i) => (
+                    <div key={i}>
+                      {it.qty}× {it.name}
+                      {(it.options || []).length > 0 && (
+                        <span className="text-slate-400"> ({it.options.map((op) => op.label).join(', ')})</span>
+                      )}
+                    </div>
+                  ))}
+                </td>
                 <td className="p-3 font-semibold">{formatPrice(o.total_price)}</td>
                 <td className="p-3">{PAYMENT_LABELS[o.payment_method] || '—'}</td>
                 <td className="p-3"><span className={`badge ${STATUS_COLORS[o.status]}`}>{STATUS_LABELS[o.status]}</span></td>
