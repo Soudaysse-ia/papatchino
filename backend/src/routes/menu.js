@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
 import { logAction } from '../audit.js';
+import { loadDefaultMenu } from '../menuData.js';
 
 const router = Router();
 
@@ -41,6 +42,21 @@ const CATEGORY_ORDER = `CASE category
   WHEN 'Boissons' THEN 9
   ELSE 8 END`;
 const MENU_ORDER = `ORDER BY ${CATEGORY_ORDER}, name`;
+
+// Charge le menu Papatchino par défaut (admin). `replace=true` remplace tout le menu existant ;
+// sinon n'ajoute le menu que si la base est vide. Utile pour initialiser un déploiement.
+router.post('/load-default', requireAuth('admin'), (req, res) => {
+  const replace = req.body?.replace === true;
+  const existing = db.prepare('SELECT COUNT(*) AS c FROM menu_items').get().c;
+  if (existing > 0 && !replace) {
+    return res.status(409).json({ error: 'Le menu n\'est pas vide. Cochez « remplacer » pour réinitialiser.' });
+  }
+  const count = loadDefaultMenu(db, { replace });
+  logAction(req.user, 'menu_chargement_defaut',
+    `Menu par défaut chargé (${count} plats${replace ? ', remplacement' : ''})`);
+  req.app.get('io')?.emit('menu:updated');
+  res.status(201).json({ ok: true, count });
+});
 
 // Liste publique du menu (clients). Seuls les articles existants, ordonnés par catégorie.
 router.get('/', (req, res) => {

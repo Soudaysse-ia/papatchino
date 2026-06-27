@@ -42,14 +42,30 @@ export default function MenuAdmin() {
     try { await api.del(`/menu/${item.id}`); load(); } catch (e) { alert(e.message); }
   }
 
+  async function loadDefaultMenu() {
+    const replace = items.length > 0;
+    const msg = replace
+      ? 'Remplacer TOUT le menu actuel par le menu Papatchino par défaut ?\n\nLes plats actuels (et leurs photos) seront supprimés. Les commandes et comptes ne sont pas touchés.'
+      : 'Charger le menu Papatchino par défaut ?';
+    if (!confirm(msg)) return;
+    try {
+      const r = await api.post('/menu/load-default', { replace });
+      alert(`Menu chargé : ${r.count} plats.`);
+      load();
+    } catch (e) { alert(e.message); }
+  }
+
   const byCat = {};
   for (const m of items) (byCat[m.category] ||= []).push(m);
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Gestion du menu & stock</h1>
-        <button className="btn-primary" onClick={() => setEditing({ ...EMPTY })}>+ Ajouter un plat</button>
+        <div className="flex gap-2">
+          <button className="btn-secondary" onClick={loadDefaultMenu}>Menu Papatchino par défaut</button>
+          <button className="btn-primary" onClick={() => setEditing({ ...EMPTY })}>+ Ajouter un plat</button>
+        </div>
       </div>
       {error && <p className="text-red-600">{error}</p>}
 
