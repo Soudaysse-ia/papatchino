@@ -134,7 +134,7 @@ router.get('/', requireAuth('admin', 'cashier', 'kitchen'), (req, res) => {
   if (payment_method) { clauses.push('payment_method = @payment_method'); params.payment_method = payment_method; }
   if (table) { clauses.push('table_label LIKE @table'); params.table = `%${table}%`; }
   if (date) { clauses.push("date(created_at) = @date"); params.date = date; }
-  if (active === '1') { clauses.push("status IN ('recue','en_preparation','prete')"); }
+  if (active === '1') { clauses.push("status IN ('recue','en_preparation','prete','servie')"); }
   const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
   const rows = db.prepare(`SELECT * FROM orders ${where} ORDER BY created_at DESC LIMIT 500`).all(params);
   res.json(rows.map(serialize));

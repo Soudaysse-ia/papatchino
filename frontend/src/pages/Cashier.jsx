@@ -39,7 +39,8 @@ export default function Cashier() {
     };
     const onUpdated = (order) => {
       setOrders((prev) => {
-        const active = ['recue', 'en_preparation', 'prete'].includes(order.status);
+        // La commande reste sur le tableau jusqu'à l'encaissement (payee) ou l'annulation.
+        const active = ['recue', 'en_preparation', 'prete', 'servie'].includes(order.status);
         const exists = prev.some((o) => o.id === order.id);
         if (!active) return prev.filter((o) => o.id !== order.id);
         if (exists) return prev.map((o) => (o.id === order.id ? order : o));
@@ -154,7 +155,10 @@ function OrderFeed({ orders, onStatus, onPay }) {
             {o.status === 'recue' && (
               <button className="btn-secondary py-1 text-sm" onClick={() => onStatus(o, 'en_preparation')}>En préparation</button>
             )}
-            {['recue', 'en_preparation', 'prete'].includes(o.status) && (
+            {o.status === 'en_preparation' && (
+              <button className="btn py-1 text-sm bg-purple-600 text-white hover:bg-purple-700" onClick={() => onStatus(o, 'prete')}>Prêt</button>
+            )}
+            {o.status === 'prete' && (
               <button className="btn-success py-1 text-sm" onClick={() => onStatus(o, 'servie')}>Servie</button>
             )}
             <button className="btn-primary py-1 text-sm" onClick={() => onPay(o)}>Encaisser</button>
