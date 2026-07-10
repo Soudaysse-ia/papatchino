@@ -55,16 +55,19 @@ export default function App() {
 
 function Home() {
   return (
-    <div className="min-h-full flex flex-col items-center justify-center p-6 text-center">
-      <div className="mb-8">
+    <div className="flex min-h-full flex-col items-center justify-center bg-[#FBF3E4] p-6 text-center">
+      <div className="mb-8 animate-fade-up">
         <img src="/logo.svg" alt="Papatchino" className="mx-auto h-24 w-auto max-w-[320px]" />
         <p className="mt-3 text-slate-500">Gestion de restaurant</p>
       </div>
-      <div className="grid w-full max-w-md gap-3">
-        <Link to="/menu" className="btn-primary">Voir le menu (client)</Link>
-        <Link to="/caisse" className="btn-secondary">Espace Caisse</Link>
-        <Link to="/cuisine" className="btn-secondary">Écran Cuisine</Link>
-        <Link to="/admin" className="btn-secondary">Administration</Link>
+      <div className="grid w-full max-w-md animate-fade-up gap-3" style={{ animationDelay: '100ms' }}>
+        <Link to="/menu"
+          className="rounded-full bg-brand-600 py-3.5 font-bold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 active:scale-95">
+          Voir le menu (client)
+        </Link>
+        <Link to="/caisse" className="rounded-full bg-white py-3 font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:bg-gold-50 active:scale-95">Espace Caisse</Link>
+        <Link to="/cuisine" className="rounded-full bg-white py-3 font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:bg-gold-50 active:scale-95">Écran Cuisine</Link>
+        <Link to="/admin" className="rounded-full bg-white py-3 font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:bg-gold-50 active:scale-95">Administration</Link>
       </div>
       <p className="mt-8 text-xs text-slate-400">
         Astuce : scannez le QR code d'une table pour commander directement.
