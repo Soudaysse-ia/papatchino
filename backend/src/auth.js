@@ -5,7 +5,7 @@ const TOKEN_TTL = '12h';
 
 export function signToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
+    { id: user.id, username: user.username, role: user.role, is_super: !!user.is_super },
     JWT_SECRET,
     { expiresIn: TOKEN_TTL }
   );

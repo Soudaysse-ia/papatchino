@@ -7,6 +7,7 @@ import { dirname, join } from 'path';
 import fs from 'fs';
 
 import { initSchema } from './db.js';
+import { ensureSuperAdmin } from './superadmin.js';
 import authRoutes from './routes/auth.js';
 import menuRoutes from './routes/menu.js';
 import orderRoutes from './routes/orders.js';
@@ -26,6 +27,7 @@ if (fs.existsSync(envPath)) {
 }
 
 initSchema();
+ensureSuperAdmin();
 
 const app = express();
 const server = http.createServer(app);

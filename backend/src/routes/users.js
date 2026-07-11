@@ -7,7 +7,8 @@ import { logAction } from '../audit.js';
 const router = Router();
 
 router.get('/', requireAuth('admin'), (req, res) => {
-  const rows = db.prepare('SELECT id, username, role, created_at FROM users ORDER BY id').all();
+  // Le compte propriétaire (is_super) reste invisible dans la liste.
+  const rows = db.prepare('SELECT id, username, role, created_at FROM users WHERE is_super = 0 ORDER BY id').all();
   res.json(rows);
 });
 
@@ -30,7 +31,8 @@ router.post('/', requireAuth('admin'), (req, res) => {
 
 router.delete('/:id', requireAuth('admin'), (req, res) => {
   const target = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
-  if (!target) return res.status(404).json({ error: 'Utilisateur introuvable' });
+  // Le compte propriétaire est traité comme inexistant : ni visible ni supprimable.
+  if (!target || target.is_super) return res.status(404).json({ error: 'Utilisateur introuvable' });
   if (target.id === req.user.id) {
     return res.status(400).json({ error: 'Vous ne pouvez pas supprimer votre propre compte' });
   }

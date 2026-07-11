@@ -16,6 +16,7 @@ export function initSchema() {
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL CHECK (role IN ('admin','cashier','kitchen')),
+      is_super INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -78,6 +79,12 @@ export function initSchema() {
   const cols = db.prepare("PRAGMA table_info(menu_items)").all();
   if (!cols.some((c) => c.name === 'options')) {
     db.exec("ALTER TABLE menu_items ADD COLUMN options TEXT NOT NULL DEFAULT '[]'");
+  }
+
+  // Migration : ajoute la colonne "is_super" (compte propriétaire caché).
+  const userCols = db.prepare("PRAGMA table_info(users)").all();
+  if (!userCols.some((c) => c.name === 'is_super')) {
+    db.exec('ALTER TABLE users ADD COLUMN is_super INTEGER NOT NULL DEFAULT 0');
   }
 }
 
