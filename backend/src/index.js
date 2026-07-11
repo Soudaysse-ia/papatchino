@@ -65,7 +65,7 @@ io.on('connection', (socket) => {
   socket.on('join', (room) => socket.join(room));
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4100;
 server.listen(PORT, () => {
   console.log(`API Resto Manager démarrée sur http://localhost:${PORT}`);
 });

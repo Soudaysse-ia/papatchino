@@ -28,7 +28,7 @@ npm run dev
 ```
 
 - Frontend : <http://localhost:5173>
-- API : <http://localhost:4000>
+- API : <http://localhost:4100>
 
 > Le `npm install` à la racine installe automatiquement les dépendances du backend
 > et du frontend (script `postinstall`). En cas de souci, utilisez `npm run install:all`.
