@@ -25,6 +25,15 @@ export default function Dashboard() {
     // eslint-disable-next-line
   }, [date]);
 
+  async function resetDay() {
+    if (!confirm(`Supprimer définitivement TOUTES les commandes du ${date} ?\n\nLes statistiques de cette journée repartiront à zéro et les commandes disparaîtront de la caisse, de la cuisine et de l'historique. Cette action est irréversible.`)) return;
+    try {
+      const r = await api.del(`/orders/day?date=${date}`);
+      alert(`${r.deleted} commande(s) supprimée(s). La journée est réinitialisée.`);
+      load();
+    } catch (e) { alert(e.message); }
+  }
+
   async function exportCsv() {
     const res = await fetch(`/api/stats/export.csv?date=${date}`, {
       headers: { Authorization: `Bearer ${getToken()}` },
@@ -50,9 +59,10 @@ export default function Dashboard() {
           <label className="text-sm font-medium text-slate-600">Date :</label>
           <input type="date" className="input w-auto" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button className="btn-secondary" onClick={exportCsv}>Exporter CSV</button>
           <button className="btn-secondary" onClick={() => window.print()}>Imprimer / PDF</button>
+          <button className="btn-danger" onClick={resetDay}>Réinitialiser la journée</button>
         </div>
       </div>
 

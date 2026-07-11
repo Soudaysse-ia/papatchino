@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
+import { logAction } from '../audit.js';
 
 const router = Router();
+
+// Efface le journal d'audit (admin). Une entrée traçant l'effacement est conservée.
+router.delete('/', requireAuth('admin'), (req, res) => {
+  const info = db.prepare('DELETE FROM access_log').run();
+  logAction(req.user, 'journal_effacement',
+    `Journal d'audit effacé (${info.changes} entrée(s) supprimée(s))`);
+  res.json({ ok: true, deleted: info.changes });
+});
 
 // Journal d'audit, filtrable (admin uniquement).
 router.get('/', requireAuth('admin'), (req, res) => {

@@ -47,9 +47,11 @@ export default function Cashier() {
         return [order, ...prev];
       });
     };
+    const onReset = () => loadOrders();
     socket.on('order:new', onNew);
     socket.on('order:updated', onUpdated);
-    return () => { socket.off('order:new', onNew); socket.off('order:updated', onUpdated); };
+    socket.on('orders:reset', onReset);
+    return () => { socket.off('order:new', onNew); socket.off('order:updated', onUpdated); socket.off('orders:reset', onReset); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

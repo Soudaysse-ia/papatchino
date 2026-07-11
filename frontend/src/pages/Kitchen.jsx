@@ -44,10 +44,12 @@ export default function Kitchen() {
         return exists ? prev.map((o) => (o.id === order.id ? order : o)) : [...prev, order];
       });
     };
+    const onReset = () => load();
     socket.on('order:new', onNew);
     socket.on('order:updated', onUpdated);
+    socket.on('orders:reset', onReset);
     const timer = setInterval(() => setTick((t) => t + 1), 30000);
-    return () => { socket.off('order:new', onNew); socket.off('order:updated', onUpdated); clearInterval(timer); };
+    return () => { socket.off('order:new', onNew); socket.off('order:updated', onUpdated); socket.off('orders:reset', onReset); clearInterval(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

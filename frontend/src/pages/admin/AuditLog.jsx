@@ -16,6 +16,10 @@ const ACTION_LABELS = {
   table_suppression: 'Suppression de table',
   utilisateur_creation: 'Création utilisateur',
   utilisateur_suppression: 'Suppression utilisateur',
+  menu_photo: 'Téléversement de photo',
+  menu_chargement_defaut: 'Chargement du menu par défaut',
+  commandes_reinitialisation: 'Réinitialisation des commandes',
+  journal_effacement: 'Effacement du journal',
 };
 
 export default function AuditLog() {
@@ -30,6 +34,15 @@ export default function AuditLog() {
     try { setLogs(await api.get(`/logs?${qs.toString()}`)); }
     catch (e) { setError(e.message); }
   }
+
+  async function clearLogs() {
+    if (!confirm("Effacer TOUT le journal d'audit ?\n\nCette action est irréversible. Une entrée traçant l'effacement (par qui, quand) sera conservée.")) return;
+    try {
+      await api.del('/logs');
+      api.get('/logs/actions').then(setActions).catch(() => {});
+      load();
+    } catch (e) { alert(e.message); }
+  }
   useEffect(() => { api.get('/logs/actions').then(setActions).catch(() => {}); }, []);
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filters]);
 
@@ -37,10 +50,15 @@ export default function AuditLog() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Journal d'audit</h1>
-      <p className="text-sm text-slate-500">
-        Toutes les actions du personnel sont enregistrées (connexions, commandes, encaissements, modifications du menu…).
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold">Journal d'audit</h1>
+          <p className="text-sm text-slate-500">
+            Toutes les actions du personnel sont enregistrées (connexions, commandes, encaissements, modifications du menu…).
+          </p>
+        </div>
+        <button className="btn-danger" onClick={clearLogs}>Effacer le journal</button>
+      </div>
 
       <div className="card grid gap-3 p-4 sm:grid-cols-3">
         <div>

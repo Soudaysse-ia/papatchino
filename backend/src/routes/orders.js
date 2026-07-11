@@ -140,6 +140,20 @@ router.get('/', requireAuth('admin', 'cashier', 'kitchen'), (req, res) => {
   res.json(rows.map(serialize));
 });
 
+// Réinitialise les commandes d'une journée (admin). Suppression définitive :
+// les statistiques du tableau de bord repartent à zéro pour cette date.
+router.delete('/day', requireAuth('admin'), (req, res) => {
+  const day = req.query.date || new Date().toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    return res.status(400).json({ error: 'Date invalide (format AAAA-MM-JJ)' });
+  }
+  const info = db.prepare('DELETE FROM orders WHERE date(created_at) = ?').run(day);
+  logAction(req.user, 'commandes_reinitialisation',
+    `Réinitialisation de la journée ${day} (${info.changes} commande(s) supprimée(s))`);
+  req.app.get('io')?.emit('orders:reset', { date: day });
+  res.json({ ok: true, deleted: info.changes });
+});
+
 // Mise à jour du statut.
 router.patch('/:id/status', requireAuth('admin', 'cashier', 'kitchen'), (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
