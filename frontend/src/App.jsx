@@ -18,7 +18,8 @@ export default function App() {
   return (
     <Routes>
       {/* Espace public (clients) */}
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Navigate to="/menu" replace />} />
+      <Route path="/staff" element={<StaffHub />} />
       <Route path="/menu" element={<CustomerMenu />} />
       <Route path="/suivi/:id" element={<OrderTracking />} />
 
@@ -53,25 +54,18 @@ export default function App() {
   );
 }
 
-function Home() {
+function StaffHub() {
   return (
     <div className="flex min-h-full flex-col items-center justify-center bg-[#FBF3E4] p-6 text-center">
       <div className="mb-8 animate-fade-up">
         <img src="/logo.svg" alt="Papatchino" className="mx-auto h-24 w-auto max-w-[320px]" />
-        <p className="mt-3 text-slate-500">Gestion de restaurant</p>
+        <p className="mt-3 text-slate-500">Espace personnel</p>
       </div>
       <div className="grid w-full max-w-md animate-fade-up gap-3" style={{ animationDelay: '100ms' }}>
-        <Link to="/menu"
-          className="rounded-full bg-brand-600 py-3.5 font-bold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 active:scale-95">
-          Voir le menu (client)
-        </Link>
         <Link to="/caisse" className="rounded-full bg-white py-3 font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:bg-gold-50 active:scale-95">Espace Caisse</Link>
         <Link to="/cuisine" className="rounded-full bg-white py-3 font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:bg-gold-50 active:scale-95">Écran Cuisine</Link>
         <Link to="/admin" className="rounded-full bg-white py-3 font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:bg-gold-50 active:scale-95">Administration</Link>
       </div>
-      <p className="mt-8 text-xs text-slate-400">
-        Astuce : scannez le QR code d'une table pour commander directement.
-      </p>
     </div>
   );
 }
@@ -94,7 +88,7 @@ function AccessDenied() {
         <Link to="/connexion" className="btn-primary" onClick={() => logout()}>
           Changer de compte
         </Link>
-        <Link to="/" className="btn-secondary">Retour à l'accueil</Link>
+        <Link to="/staff" className="btn-secondary">Retour à l'accueil</Link>
       </div>
     </div>
   );
