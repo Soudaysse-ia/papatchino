@@ -51,7 +51,36 @@ export default function OrdersHistory() {
 
       {error && <p className="text-red-600">{error}</p>}
 
-      <div className="card overflow-x-auto">
+      {/* Vue mobile : cartes empilées */}
+      <div className="space-y-2 md:hidden">
+        {orders.length === 0 && <p className="card p-6 text-center text-slate-400">Aucune commande.</p>}
+        {orders.map((o) => (
+          <div key={o.id} className="card p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-bold">#{o.id} · {SOURCE_LABELS[o.source]}</span>
+              <span className={`badge ${STATUS_COLORS[o.status]}`}>{STATUS_LABELS[o.status]}</span>
+            </div>
+            <p className="mt-0.5 text-xs text-slate-500">{formatDateTime(o.created_at)}{o.table_label ? ` · ${o.table_label}` : ''}</p>
+            <ul className="mt-2 text-sm text-slate-600">
+              {o.items.map((it, i) => (
+                <li key={i}>
+                  {it.qty}× {it.name}
+                  {(it.options || []).length > 0 && (
+                    <span className="text-slate-400"> ({it.options.map((op) => op.label).join(', ')})</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
+              <span className="text-sm text-slate-500">{PAYMENT_LABELS[o.payment_method] || 'Non payé'}</span>
+              <span className="font-bold text-brand-600">{formatPrice(o.total_price)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Vue bureau : tableau */}
+      <div className="card hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>

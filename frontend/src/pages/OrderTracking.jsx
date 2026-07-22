@@ -5,11 +5,17 @@ import { getSocket } from '../lib/socket.js';
 import { formatPrice } from '../lib/format.js';
 
 // Étapes visibles côté client.
-const STEPS = [
+const STEPS_TABLE = [
   { key: 'recue', label: 'Reçue', desc: 'Votre commande est bien arrivée', icon: '📥' },
   { key: 'en_preparation', label: 'En préparation', desc: 'Nos cuisiniers s\'en occupent', icon: '👨‍🍳' },
   { key: 'prete', label: 'Prête', desc: 'Ça sort de la cuisine !', icon: '🍽️' },
   { key: 'servie', label: 'Servie', desc: 'Bon appétit !', icon: '✅' },
+];
+const STEPS_TAKEAWAY = [
+  { key: 'recue', label: 'Reçue', desc: 'Votre commande est bien arrivée', icon: '📥' },
+  { key: 'en_preparation', label: 'En préparation', desc: 'Nos cuisiniers s\'en occupent', icon: '👨‍🍳' },
+  { key: 'prete', label: 'Prête à récupérer', desc: 'Venez récupérer votre commande au comptoir !', icon: '🛍️' },
+  { key: 'servie', label: 'Récupérée', desc: 'Bon appétit !', icon: '✅' },
 ];
 
 function stepIndex(status) {
@@ -60,6 +66,8 @@ export default function OrderTracking() {
     );
   }
 
+  const isTakeaway = order.source === 'walk_in';
+  const STEPS = isTakeaway ? STEPS_TAKEAWAY : STEPS_TABLE;
   const current = stepIndex(order.status);
   const cancelled = order.status === 'annulee';
 
@@ -70,9 +78,17 @@ export default function OrderTracking() {
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.08]"
           style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1.2px, transparent 0)', backgroundSize: '20px 20px' }} />
         <img src="/logo.svg" alt="Papatchino" className="relative mx-auto h-9 w-auto rounded-lg bg-white px-2 py-1 shadow" />
-        <p className="relative mt-5 text-xs uppercase tracking-widest text-white/60">Votre commande</p>
+        <p className="relative mt-5 text-xs uppercase tracking-widest text-white/60">
+          {isTakeaway ? 'Commande à emporter' : 'Votre commande'}
+        </p>
         <p className="relative font-display text-5xl text-gold-400 drop-shadow-sm">#{order.id}</p>
         {order.table_label && <p className="relative mt-1 text-sm text-white/80">{order.table_label}</p>}
+        {isTakeaway && order.customer_name && (
+          <p className="relative mt-1 text-sm text-white/80">👤 {order.customer_name}</p>
+        )}
+        {isTakeaway && order.pickup_time && (
+          <p className="relative mt-1 text-sm text-gold-300 font-semibold">🕐 Retrait prévu à {order.pickup_time}</p>
+        )}
         <svg aria-hidden className="absolute inset-x-0 bottom-0 h-7 w-full text-[#FBF3E4]" viewBox="0 0 1440 48" preserveAspectRatio="none">
           <path fill="currentColor" d="M0,48 L0,22 C240,46 480,6 720,18 C960,30 1200,10 1440,26 L1440,48 Z" />
         </svg>

@@ -30,8 +30,13 @@ router.post('/', (req, res) => {
   const user = optionalUser(req);
   const source = b.source || 'qr_table';
 
-  if (source !== 'qr_table' && (!user || !['admin', 'cashier'].includes(user.role))) {
+  // walk_in public autorisé si le client fournit ses coordonnées (commande à emporter).
+  const isTakeaway = source === 'walk_in' && !user;
+  if (source !== 'qr_table' && !isTakeaway && (!user || !['admin', 'cashier'].includes(user.role))) {
     return res.status(403).json({ error: 'Seul le personnel peut créer ce type de commande' });
+  }
+  if (isTakeaway && (!b.customer_name || !b.customer_phone)) {
+    return res.status(400).json({ error: 'Nom et numéro de téléphone requis pour une commande à emporter' });
   }
 
   // Déduplication (synchronisation hors ligne) : même client_uid => on renvoie l'existant.
@@ -85,8 +90,8 @@ router.post('/', (req, res) => {
       }
 
       const info = db.prepare(`
-        INSERT INTO orders (client_uid, source, table_id, table_label, items, total_price, payment_method, status, note, handled_by)
-        VALUES (@client_uid, @source, @table_id, @table_label, @items, @total_price, @payment_method, @status, @note, @handled_by)
+        INSERT INTO orders (client_uid, source, table_id, table_label, items, total_price, payment_method, status, note, handled_by, customer_name, customer_phone, pickup_time)
+        VALUES (@client_uid, @source, @table_id, @table_label, @items, @total_price, @payment_method, @status, @note, @handled_by, @customer_name, @customer_phone, @pickup_time)
       `).run({
         client_uid: b.client_uid || null,
         source,
@@ -98,6 +103,9 @@ router.post('/', (req, res) => {
         status: 'recue',
         note: b.note || '',
         handled_by: user?.id ?? null,
+        customer_name: b.customer_name || '',
+        customer_phone: b.customer_phone || '',
+        pickup_time: b.pickup_time || '',
       });
       return db.prepare('SELECT * FROM orders WHERE id = ?').get(info.lastInsertRowid);
     })();
@@ -122,7 +130,7 @@ router.get('/track/:id', (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   if (!order) return res.status(404).json({ error: 'Commande introuvable' });
   const s = serialize(order);
-  res.json({ id: s.id, status: s.status, status_label: s.status_label, table_label: s.table_label, items: s.items, total_price: s.total_price, created_at: s.created_at });
+  res.json({ id: s.id, status: s.status, status_label: s.status_label, source: s.source, table_label: s.table_label, items: s.items, total_price: s.total_price, created_at: s.created_at, customer_name: s.customer_name, customer_phone: s.customer_phone, pickup_time: s.pickup_time });
 });
 
 // Flux des commandes (staff) avec filtres.

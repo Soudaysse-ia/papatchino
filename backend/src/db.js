@@ -75,6 +75,12 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_log_ts ON access_log(timestamp);
   `);
 
+  // Migration : ajout des colonnes client pour commandes à emporter.
+  const cols = db.prepare("PRAGMA table_info(orders)").all().map((c) => c.name);
+  if (!cols.includes('customer_name'))  db.exec("ALTER TABLE orders ADD COLUMN customer_name TEXT DEFAULT ''");
+  if (!cols.includes('customer_phone')) db.exec("ALTER TABLE orders ADD COLUMN customer_phone TEXT DEFAULT ''");
+  if (!cols.includes('pickup_time'))    db.exec("ALTER TABLE orders ADD COLUMN pickup_time TEXT DEFAULT ''"  );
+
   // Migration : ajoute la colonne "options" aux bases existantes.
   const cols = db.prepare("PRAGMA table_info(menu_items)").all();
   if (!cols.some((c) => c.name === 'options')) {

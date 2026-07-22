@@ -21,6 +21,10 @@ export default function CustomerMenu() {
   const [submitting, setSubmitting] = useState(false);
   const [offlineConfirm, setOfflineConfirm] = useState(false);
   const [error, setError] = useState('');
+  const [showTakeawayForm, setShowTakeawayForm] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [pickupTime, setPickupTime] = useState('');
   const [activeCat, setActiveCat] = useState('');
   const sectionRefs = useRef({});
 
@@ -97,15 +101,26 @@ export default function CustomerMenu() {
     return cart.filter((l) => l.item.id === itemId).reduce((s, l) => s + l.qty, 0);
   }
 
-  async function submitOrder() {
+  function handleCommanderClick() {
+    if (cart.length === 0) return;
+    if (!tableToken) {
+      setShowTakeawayForm(true);
+    } else {
+      submitOrder();
+    }
+  }
+
+  async function submitOrder(takeawayInfo = null) {
     if (cart.length === 0) return;
     setSubmitting(true);
     setError('');
+    const isTakeaway = !tableToken;
     const order = {
       client_uid: newClientUid(),
-      source: 'qr_table',
+      source: isTakeaway ? 'walk_in' : 'qr_table',
       table_token: tableToken || undefined,
       items: cart.map((l) => ({ id: l.item.id, qty: l.qty, options: l.selection })),
+      ...(isTakeaway && takeawayInfo),
     };
     try {
       if (navigator.onLine) {
@@ -213,7 +228,7 @@ export default function CustomerMenu() {
 
         {!tableToken && (
           <p className="m-4 rounded-2xl border border-gold-200 bg-gold-50 px-4 py-3 text-sm text-gold-800">
-            Aucune table détectée. Scannez le QR code de votre table pour une commande à table.
+            🛍️ Commande à emporter — passez votre commande et venez la récupérer au comptoir.
           </p>
         )}
 
@@ -288,7 +303,7 @@ export default function CustomerMenu() {
                 </button>
                 <button
                   className="ml-auto rounded-full bg-white px-6 py-2.5 font-bold text-brand-700 shadow transition hover:bg-gold-50 active:scale-95 disabled:opacity-60"
-                  onClick={submitOrder} disabled={submitting}>
+                  onClick={handleCommanderClick} disabled={submitting}>
                   {submitting ? 'Envoi…' : 'Commander'}
                 </button>
               </div>
@@ -303,6 +318,65 @@ export default function CustomerMenu() {
           onClose={() => setPicker(null)}
           onConfirm={(selection, qty) => { addLine(picker, selection, qty); setPicker(null); }}
         />
+      )}
+
+      {showTakeawayForm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-3 pb-3 sm:items-center">
+          <div className="w-full max-w-md animate-fade-up rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="font-display text-2xl text-slate-800">Votre commande à emporter</h2>
+            <p className="mt-1 text-sm text-slate-500">Nous vous appellerons pour confirmer votre commande.</p>
+            {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+            <div className="mt-5 space-y-3">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Votre nom *</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                  placeholder="Ex : Moussa Diallo"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Numéro de téléphone *</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                  placeholder="Ex : +221 77 000 00 00"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Heure de retrait souhaitée *</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                  type="time"
+                  value={pickupTime}
+                  onChange={(e) => setPickupTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                className="flex-1 rounded-full border border-slate-200 py-3 font-semibold text-slate-600 transition hover:bg-slate-50 active:scale-95"
+                onClick={() => { setShowTakeawayForm(false); setError(''); }}>
+                Annuler
+              </button>
+              <button
+                className="flex-1 rounded-full bg-brand-600 py-3 font-bold text-white shadow transition hover:bg-brand-700 active:scale-95 disabled:opacity-60"
+                disabled={submitting}
+                onClick={() => {
+                  if (!customerName.trim()) { setError('Veuillez entrer votre nom.'); return; }
+                  if (!customerPhone.trim()) { setError('Veuillez entrer votre numéro de téléphone.'); return; }
+                  if (!pickupTime) { setError("Veuillez indiquer l'heure de retrait."); return; }
+                  setShowTakeawayForm(false);
+                  submitOrder({ customer_name: customerName.trim(), customer_phone: customerPhone.trim(), pickup_time: pickupTime });
+                }}>
+                {submitting ? 'Envoi…' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="px-4 pb-6 pt-2 text-center">
