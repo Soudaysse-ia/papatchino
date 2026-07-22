@@ -331,7 +331,7 @@ export default function CustomerMenu() {
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Votre nom *</label>
                 <input
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-                  placeholder="Ex : Moussa Diallo"
+                  placeholder="Ex : Mohamed Ahamada"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                 />
@@ -340,7 +340,7 @@ export default function CustomerMenu() {
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Numéro de téléphone *</label>
                 <input
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-                  placeholder="Ex : +221 77 000 00 00"
+                  placeholder="Ex : +269 333 00 00"
                   type="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
