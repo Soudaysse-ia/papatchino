@@ -90,18 +90,24 @@ export default function Kitchen() {
             {sorted.map((o) => {
               const mins = Math.floor((Date.now() - new Date(o.created_at.replace(' ', 'T') + 'Z')) / 60000);
               const urgent = mins >= 10;
+              const takeaway = o.source === 'walk_in' && (o.customer_name || o.customer_phone || o.pickup_time);
               return (
                 <div key={o.id} className={`rounded-xl border-2 p-4 ${urgent ? 'border-red-500 bg-slate-800' : 'border-slate-700 bg-slate-800'}`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-xl font-extrabold">#{o.id}</p>
-                      <p className="text-sm text-slate-400">{o.table_label || SOURCE_LABELS[o.source]}</p>
+                      <p className="text-sm text-slate-400">{o.table_label || (takeaway ? '🛍️ À emporter' : SOURCE_LABELS[o.source])}</p>
                     </div>
                     <div className="text-right">
                       <p className={`font-bold ${urgent ? 'text-red-400' : 'text-emerald-400'}`}>{elapsed(o.created_at)}</p>
                       <p className="text-xs text-slate-500">{formatTime(o.created_at)}</p>
                     </div>
                   </div>
+                  {takeaway && (o.customer_name || o.pickup_time) && (
+                    <p className="mt-2 rounded bg-gold-500/20 px-2 py-1 text-sm font-semibold text-gold-300">
+                      {o.customer_name ? `👤 ${o.customer_name}` : ''}{o.customer_name && o.pickup_time ? ' · ' : ''}{o.pickup_time ? `🕐 ${o.pickup_time}` : ''}
+                    </p>
+                  )}
                   {o.note && <p className="mt-2 rounded bg-amber-500/20 px-2 py-1 text-sm text-amber-300">📝 {o.note}</p>}
                   <ul className="mt-3 space-y-1 text-lg">
                     {o.items.map((it, i) => (

@@ -127,16 +127,29 @@ function OrderFeed({ orders, onStatus, onPay }) {
   }
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {orders.map((o) => (
-        <div key={o.id} className="card p-4">
+      {orders.map((o) => {
+        const takeaway = o.source === 'walk_in' && (o.customer_name || o.customer_phone || o.pickup_time);
+        return (
+        <div key={o.id} className={`card p-4 ${takeaway ? 'ring-2 ring-gold-300' : ''}`}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-bold">#{o.id} · {o.table_label || SOURCE_LABELS[o.source]}</p>
+              <p className="font-bold">#{o.id} · {o.table_label || (takeaway ? 'À emporter' : SOURCE_LABELS[o.source])}</p>
               <p className="text-xs text-slate-500">{formatTime(o.created_at)} · il y a {elapsed(o.created_at)}</p>
             </div>
             <span className={`badge ${STATUS_COLORS[o.status]}`}>{STATUS_LABELS[o.status]}</span>
           </div>
-          <span className="mt-1 inline-block text-xs text-slate-400">{SOURCE_LABELS[o.source]}</span>
+          <span className={`mt-1 inline-block text-xs ${takeaway ? 'font-semibold text-brand-600' : 'text-slate-400'}`}>
+            {takeaway ? '🛍️ À emporter' : SOURCE_LABELS[o.source]}
+          </span>
+          {takeaway && (
+            <div className="mt-2 rounded-lg border border-gold-200 bg-gold-50 px-3 py-2 text-sm">
+              {o.customer_name && <p className="font-semibold text-slate-800">👤 {o.customer_name}</p>}
+              {o.customer_phone && (
+                <p className="text-slate-600">📞 <a href={`tel:${o.customer_phone}`} className="font-medium underline">{o.customer_phone}</a></p>
+              )}
+              {o.pickup_time && <p className="font-semibold text-brand-700">🕐 Retrait souhaité à {o.pickup_time}</p>}
+            </div>
+          )}
           <ul className="mt-3 space-y-1 text-sm">
             {o.items.map((it, i) => (
               <li key={i}>
@@ -167,7 +180,8 @@ function OrderFeed({ orders, onStatus, onPay }) {
             <button className="btn-danger py-1 text-sm" onClick={() => { if (confirm('Annuler cette commande ?')) onStatus(o, 'annulee'); }}>Annuler</button>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
