@@ -76,14 +76,14 @@ export function initSchema() {
   `);
 
   // Migration : ajout des colonnes client pour commandes à emporter.
-  const cols = db.prepare("PRAGMA table_info(orders)").all().map((c) => c.name);
-  if (!cols.includes('customer_name'))  db.exec("ALTER TABLE orders ADD COLUMN customer_name TEXT DEFAULT ''");
-  if (!cols.includes('customer_phone')) db.exec("ALTER TABLE orders ADD COLUMN customer_phone TEXT DEFAULT ''");
-  if (!cols.includes('pickup_time'))    db.exec("ALTER TABLE orders ADD COLUMN pickup_time TEXT DEFAULT ''"  );
+  const orderCols = db.prepare("PRAGMA table_info(orders)").all().map((c) => c.name);
+  if (!orderCols.includes('customer_name'))  db.exec("ALTER TABLE orders ADD COLUMN customer_name TEXT DEFAULT ''");
+  if (!orderCols.includes('customer_phone')) db.exec("ALTER TABLE orders ADD COLUMN customer_phone TEXT DEFAULT ''");
+  if (!orderCols.includes('pickup_time'))    db.exec("ALTER TABLE orders ADD COLUMN pickup_time TEXT DEFAULT ''"  );
 
   // Migration : ajoute la colonne "options" aux bases existantes.
-  const cols = db.prepare("PRAGMA table_info(menu_items)").all();
-  if (!cols.some((c) => c.name === 'options')) {
+  const menuCols = db.prepare("PRAGMA table_info(menu_items)").all();
+  if (!menuCols.some((c) => c.name === 'options')) {
     db.exec("ALTER TABLE menu_items ADD COLUMN options TEXT NOT NULL DEFAULT '[]'");
   }
 

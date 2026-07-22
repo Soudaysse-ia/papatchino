@@ -18,9 +18,9 @@ const STEPS_TAKEAWAY = [
   { key: 'servie', label: 'Récupérée', desc: 'Bon appétit !', icon: '✅' },
 ];
 
-function stepIndex(status) {
-  if (status === 'payee') return STEPS.length - 1; // payée = servie pour le client
-  return STEPS.findIndex((s) => s.key === status);
+function stepIndex(steps, status) {
+  if (status === 'payee') return steps.length - 1; // payée = servie pour le client
+  return steps.findIndex((s) => s.key === status);
 }
 
 export default function OrderTracking() {
@@ -68,7 +68,7 @@ export default function OrderTracking() {
 
   const isTakeaway = order.source === 'walk_in';
   const STEPS = isTakeaway ? STEPS_TAKEAWAY : STEPS_TABLE;
-  const current = stepIndex(order.status);
+  const current = stepIndex(STEPS, order.status);
   const cancelled = order.status === 'annulee';
 
   return (
